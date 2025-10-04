@@ -7,6 +7,7 @@ import CreditCardIcon from '@mui/icons-material/CreditCard';
 import SmartphoneIcon from '@mui/icons-material/Smartphone';
 import PersonIcon from '@mui/icons-material/Person';
 import LanguageIcon from '@mui/icons-material/Language';
+import Footer from '@/components/Footer';
 
 const Check = CheckIcon;
 const CreditCard = CreditCardIcon;
@@ -107,7 +108,7 @@ export default function ProductSelectionPage() {
     },
     {
       id: 'digital-only',
-      title: 'Digital Profile Only',
+      title: 'Unlimited Profile Updates',
       subtitle: 'Without Linkist App & AI credits',
       price: `Starting from ${prices.digitalOnly}`,
       priceLabel: 'Basic',
@@ -115,7 +116,7 @@ export default function ProductSelectionPage() {
       features: [
         'Digital Business Card',
         'Basic Profile',
-        'Limited Updates (5/month)',
+        'Unlimited Profile Updates',
         'QR Code Generation',
         'Basic Analytics',
         'Community Support'
@@ -292,16 +293,6 @@ export default function ProductSelectionPage() {
           ))}
         </div>
 
-        {/* Comparison Note */}
-        <div className="bg-gray-50 rounded-xl p-4 text-center">
-          <p className="text-gray-600">
-            Need help choosing? All plans include a 30-day money-back guarantee.
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            Prices may vary based on your location and selected features.
-          </p>
-        </div>
-
         {/* Action Buttons */}
         <div className="mt-6 flex items-center justify-center gap-4">
           <button
@@ -330,6 +321,8 @@ export default function ProductSelectionPage() {
           )}
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

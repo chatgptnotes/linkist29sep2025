@@ -2,10 +2,21 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import CheckIcon from '@mui/icons-material/Check';
+import PersonIcon from '@mui/icons-material/Person';
+import PaletteIcon from '@mui/icons-material/Palette';
+import BrushIcon from '@mui/icons-material/Brush';
+import GridOnIcon from '@mui/icons-material/GridOn';
+import WarningIcon from '@mui/icons-material/Warning';
+import InfoIcon from '@mui/icons-material/Info';
+import Footer from '@/components/Footer';
 
 // Icon aliases
-const Check = CheckIcon;
+const Person = PersonIcon;
+const Palette = PaletteIcon;
+const Brush = BrushIcon;
+const GridPattern = GridOnIcon;
+const Warning = WarningIcon;
+const Info = InfoIcon;
 
 // Define types for our configuration
 type BaseMaterial = 'pvc' | 'wood' | 'metal';
@@ -35,13 +46,14 @@ interface PriceSummary {
 export default function ConfigureNewPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<StepData>({
-    firstName: 'John',
-    lastName: 'Doe',
+    firstName: '',
+    lastName: '',
     baseMaterial: null,
     texture: null,
     colour: null,
     pattern: null
   });
+  const [userCountry, setUserCountry] = useState<string>('India');
 
   // Clear any existing corrupted data on component mount
   useEffect(() => {
@@ -49,6 +61,30 @@ export default function ConfigureNewPage() {
     localStorage.removeItem('nfcConfig');
     localStorage.removeItem('cardConfig');
     console.log('Configure: Cleared old localStorage data');
+
+    // Get user profile data from localStorage (from welcome page)
+    const userProfile = localStorage.getItem('userProfile');
+    if (userProfile) {
+      try {
+        const profile = JSON.parse(userProfile);
+        setUserCountry(profile.country || 'India');
+
+        // Pre-fill firstName and lastName from userProfile if available
+        setFormData(prev => ({
+          ...prev,
+          firstName: profile.firstName || '',
+          lastName: profile.lastName || ''
+        }));
+
+        console.log('Configure: Pre-filled user data from profile:', {
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          country: profile.country
+        });
+      } catch (error) {
+        console.error('Error parsing user profile:', error);
+      }
+    }
   }, []);
 
   // Admin-configured prices (these would come from admin panel)
@@ -158,14 +194,23 @@ export default function ConfigureNewPage() {
     return prices[formData.baseMaterial];
   };
 
-  // Calculate price summary with simplified tax logic
+  // Calculate price summary with region-based tax logic
   const calculatePriceSummary = (): PriceSummary | null => {
     const basePrice = getPrice();
     if (!basePrice) return null;
 
-    // Default 5% VAT (will be 18% GST for India deliveries at checkout)
-    const taxRate = 0.05;
-    const taxLabel = 'VAT (5%)';
+    // Region-based tax rates
+    let taxRate = 0.10; // Default 10%
+    let taxLabel = 'VAT (10%)';
+
+    if (userCountry === 'India') {
+      taxRate = 0.18;
+      taxLabel = 'GST (18%)';
+    } else if (userCountry === 'UAE') {
+      taxRate = 0.05;
+      taxLabel = 'VAT (5%)';
+    }
+
     const taxAmount = basePrice * taxRate;
 
     // Shipping is included in base price
@@ -263,9 +308,9 @@ export default function ConfigureNewPage() {
 
             {/* Step 1: Personalize Name - Compact Modern Card */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-3">
-                <h2 className="text-lg font-semibold text-white flex items-center">
-                  <span className="mr-2">👤</span> Personalize Your Name
+              <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Person className="mr-2 w-5 h-5 text-gray-600" /> Personalize Your Name
                 </h2>
               </div>
               <div className="p-6">
@@ -317,9 +362,9 @@ export default function ConfigureNewPage() {
 
             {/* Step 2: Base Material - Modern Grid */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-gray-700 to-gray-800 px-6 py-3">
-                <h2 className="text-lg font-semibold text-white flex items-center">
-                  <span className="mr-2">🎨</span> Base Material
+              <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Palette className="mr-2 w-5 h-5 text-gray-600" /> Base Material
                 </h2>
               </div>
               <div className="p-4">
@@ -330,17 +375,12 @@ export default function ConfigureNewPage() {
                       onClick={() => handleBaseMaterialChange(material.value)}
                       className={`relative p-4 border-2 rounded-xl cursor-pointer transition-all ${
                         formData.baseMaterial === material.value
-                          ? 'border-red-500 bg-red-50 shadow-md scale-105'
+                          ? 'border-red-500 bg-red-50 shadow-md ring-2 ring-red-200'
                           : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                       }`}
                     >
-                      {formData.baseMaterial === material.value && (
-                        <div className="absolute top-2 right-2">
-                          <Check className="h-4 w-4 text-red-500" />
-                        </div>
-                      )}
                       <div className="text-center">
-                        <h3 className="font-semibold text-gray-900 text-sm">{material.label}</h3>
+                        <h3 className={`font-semibold text-sm ${formData.baseMaterial === material.value ? 'text-red-600' : 'text-gray-900'}`}>{material.label}</h3>
                         <p className="text-xs text-gray-500 mt-1 line-clamp-2">{material.description}</p>
                         <div className="mt-3 text-lg font-bold text-gray-900">${prices[material.value]}</div>
                       </div>
@@ -352,9 +392,9 @@ export default function ConfigureNewPage() {
 
             {/* Combined Texture & Colour in One Card */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-3">
-                <h2 className="text-lg font-semibold text-white flex items-center">
-                  <span className="mr-2">✨</span> Texture & Colour
+              <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Brush className="mr-2 w-5 h-5 text-gray-600" /> Texture & Colour
                 </h2>
               </div>
 
@@ -433,7 +473,7 @@ export default function ConfigureNewPage() {
                 {!formData.baseMaterial && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                     <p className="text-xs text-amber-700 flex items-center">
-                      <span className="mr-2">⚠️</span> Select a base material to see available options
+                      <Warning className="mr-2 w-4 h-4" /> Select a base material to see available options
                     </p>
                   </div>
                 )}
@@ -442,9 +482,9 @@ export default function ConfigureNewPage() {
 
             {/* Step 4: Pattern - Modern Compact */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3">
-                <h2 className="text-lg font-semibold text-white flex items-center">
-                  <span className="mr-2">🎭</span> Pattern
+              <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <GridPattern className="mr-2 w-5 h-5 text-gray-600" /> Pattern
                 </h2>
               </div>
               <div className="p-4">
@@ -458,17 +498,14 @@ export default function ConfigureNewPage() {
                         onClick={() => handlePatternChange(pattern.id)}
                         className={`relative p-3 border-2 rounded-xl transition-all ${
                           isSelected
-                            ? 'border-red-500 bg-red-50 shadow-md scale-105'
+                            ? 'border-red-500 bg-red-50 shadow-md ring-2 ring-red-200'
                             : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
                         }`}
                       >
-                        {isSelected && (
-                          <Check className="absolute top-2 right-2 h-4 w-4 text-red-500" />
-                        )}
                         <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg mb-2 flex items-center justify-center">
-                          <span className="text-gray-600 text-xs font-medium">{pattern.name}</span>
+                          <span className={`text-xs font-medium ${isSelected ? 'text-red-600' : 'text-gray-600'}`}>{pattern.name}</span>
                         </div>
-                        <span className="text-xs font-medium text-gray-700">{pattern.name}</span>
+                        <span className={`text-xs font-medium ${isSelected ? 'text-red-600' : 'text-gray-700'}`}>{pattern.name}</span>
                       </button>
                     );
                   })}
@@ -483,8 +520,8 @@ export default function ConfigureNewPage() {
             <div className="sticky top-32 space-y-4">
               {/* Card Preview - Compact Modern */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-6 py-3">
-                  <h3 className="text-lg font-semibold text-white">Live Preview</h3>
+                <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+                  <h3 className="text-lg font-semibold text-gray-900">Live Preview</h3>
                 </div>
                 <div className="p-4 space-y-4">
                   {/* Front Card */}
@@ -555,8 +592,8 @@ export default function ConfigureNewPage() {
 
               {/* Detailed Price Breakdown */}
               <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-4 py-2">
-                  <h3 className="text-sm font-semibold text-white">Price Breakdown</h3>
+                <div className="bg-gray-50 border-b border-gray-200 px-4 py-2">
+                  <h3 className="text-sm font-semibold text-gray-900">Price Breakdown</h3>
                 </div>
                 <div className="p-4">
                   {(() => {
@@ -605,10 +642,16 @@ export default function ConfigureNewPage() {
                           </div>
                         </div>
 
-                        {/* Info about India GST */}
+                        {/* Info about Tax based on region */}
                         <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                          <p className="text-xs text-blue-700">
-                            ℹ️ GST (18%) will apply for deliveries to India
+                          <p className="text-xs text-blue-700 flex items-center">
+                            <Info className="mr-1 w-4 h-4" />
+                            {userCountry === 'India'
+                              ? 'GST (18%) will apply for deliveries to India'
+                              : userCountry === 'UAE'
+                              ? 'VAT (5%) will apply for deliveries to UAE'
+                              : `VAT (10%) will apply for international deliveries`
+                            }
                           </p>
                         </div>
 
@@ -634,8 +677,8 @@ export default function ConfigureNewPage() {
                           if (missingItems.length > 0) {
                             return (
                               <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-                                <p className="text-xs text-amber-700">
-                                  ⚠️ Please select: <span className="font-semibold">{missingItems.join(', ')}</span>
+                                <p className="text-xs text-amber-700 flex items-center">
+                                  <Warning className="mr-1 w-4 h-4" /> Please select: <span className="font-semibold ml-1">{missingItems.join(', ')}</span>
                                 </p>
                               </div>
                             );
@@ -664,23 +707,7 @@ export default function ConfigureNewPage() {
         </div>
       </div>
 
-      {/* Simplified Footer Navigation */}
-      <footer className="bg-black text-white border-t border-white/10 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-white text-xl font-bold">Linkist</div>
-            <div className="flex gap-6 flex-wrap justify-center text-sm">
-              <a href="/privacy" className="text-white/70 hover:text-red-500 transition-colors">Privacy Policy</a>
-              <a href="/terms" className="text-white/70 hover:text-red-500 transition-colors">Terms of Service</a>
-              <a href="/security" className="text-white/70 hover:text-red-500 transition-colors">Security</a>
-              <a href="/accessibility" className="text-white/70 hover:text-red-500 transition-colors">Accessibility</a>
-            </div>
-            <div className="text-white/50 text-sm">
-              © {new Date().getFullYear()} Linkist Inc. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

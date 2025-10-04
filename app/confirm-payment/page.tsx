@@ -7,6 +7,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import LockIcon from '@mui/icons-material/Lock';
 import CreditCardIcon from '@mui/icons-material/CreditCard';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import Footer from '@/components/Footer';
 
 // Icon aliases
 const ChevronDown = ExpandMoreIcon;
@@ -347,6 +348,7 @@ export default function ConfirmPaymentPage() {
         </div>
       </div>
 
+      <Footer />
     </div>
   );
 }

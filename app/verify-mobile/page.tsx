@@ -189,11 +189,6 @@ function VerifyMobileContent() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
-      <header className="px-6 py-4 border-b border-gray-100">
-        <Logo width={120} height={40} />
-      </header>
-
       {/* Main Content */}
       <div className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
